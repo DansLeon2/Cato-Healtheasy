@@ -116,3 +116,44 @@ SELECT JSON {'id_paciente': p.id_paciente,
                         WHERE c.id_paciente = p.id_paciente ]}
 FROM pacientes p WITH INSERT UPDATE DELETE;
 
+-- VISTA 2: Detalles del Médico y su Agenda de Citas Anidada
+CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW medico_agenda_dv AS
+SELECT JSON {
+    '_id'          : m.id_medico,
+    'nombre'       : m.nombre,
+    'especialidad' : m.especialidad,
+    'consultorio'  : m.consultorio,
+    'citas_asignadas' : [
+        SELECT JSON {
+            '_id'         : c.id_cita,
+            'id_paciente' : c.id_paciente,
+            'fecha_hora'  : c.fecha_hora,
+            'motivo'      : c.motivo,
+            'estado'      : c.estado
+        }
+        FROM citas c WITH INSERT UPDATE DELETE
+        WHERE c.id_medico = m.id_medico
+    ]
+}
+FROM medicos m WITH INSERT UPDATE DELETE;
+/
+
+-- VISTA 3: Información de Medicamentos y Relación de Inventarios Activos
+CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW medicamento_receta_dv AS
+SELECT JSON {
+    '_id'              : m.id_medicamento,
+    'nombre_comercial' : m.nombre_comercial,
+    'uso_principal'    : m.uso_principal,
+    'distribucion_pacientes' : [
+        SELECT JSON {
+            '_id'          : i.id_paciente, -- Llave primaria compuesta de la tabla relacional intermedia
+            'stock_actual' : i.stock_actual,
+            'estado_texto' : i.estado_texto
+        }
+        FROM inventario_paciente i WITH INSERT UPDATE DELETE
+        WHERE i.id_medicamento = m.id_medicamento
+    ]
+}
+FROM medicamentos m WITH INSERT UPDATE DELETE;
+/
+

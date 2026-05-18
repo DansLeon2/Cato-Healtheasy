@@ -1,4 +1,3 @@
-// backend/config/database.js
 import oracledb from 'oracledb';
 import dotenv from 'dotenv';
 
