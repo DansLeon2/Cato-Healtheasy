@@ -675,8 +675,8 @@ const CATALOGO_QUERIES = [
     id: 1,
     titulo: "Query 01: Pacientes > 65 años con citas atrasadas (JOIN + DATE)",
     sql: "SELECT p.nombre, p.edad, c.fecha_hora\nFROM pacientes p\nJOIN citas c ON p.id_paciente = c.id_paciente\nWHERE p.edad >= 65 AND c.estado = 'Pendiente'\nORDER BY c.fecha_hora ASC;",
-    tiempoSin: 182,
-    tiempoCon: 14,
+    tiempoSin: 85,
+    tiempoCon: 46,
     explicacion: "TABLE ACCESS FULL en Pacientes mitigado por un Index Range Scan en p.edad y c.estado.",
     resultados: [
       { Paciente: "Ernesto Martínez", Edad: 72, Fecha: "19/05/2026" },
@@ -756,8 +756,8 @@ const CATALOGO_QUERIES = [
     id: 8,
     titulo: "Query 08: Ratio de Completitud de Citas por Especialidad (Agrupación)",
     sql: "SELECT m.especialidad, \n  COUNT(CASE WHEN c.estado = 'Completada' THEN 1 END) as completadas,\n  COUNT(c.id_cita) as total\nFROM medicos m\nJOIN citas c ON m.id_medico = c.id_medico\nGROUP BY m.especialidad;",
-    tiempoSin: 150,
-    tiempoCon: 18,
+    tiempoSin: 188,
+    tiempoCon: 49,
     explicacion: "Evaluación CASE optimizada por escaneo rápido de índice en la columna estado.",
     resultados: [
       { Especialidad: "Cardiología", Completadas: 45, Total: 50 },

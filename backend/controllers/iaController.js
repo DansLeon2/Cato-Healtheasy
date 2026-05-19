@@ -59,10 +59,8 @@ export const procesarPreguntaIA = async (req, res) => {
                 filtroDoctor = "AND LOWER(m.nombre) LIKE '%carlos%'";
             } else if (texto.includes('roberto') || texto.includes('silva')) {
                 filtroDoctor = "AND LOWER(m.nombre) LIKE '%roberto%'";
-            
             } else if (texto.includes('juana')) {
                 filtroDoctor = "AND LOWER(m.nombre) LIKE '%juana%'";
-            
             } else if (texto.includes('ana') || texto.includes('lucia') || texto.includes('lucía')) {
                 filtroDoctor = "AND LOWER(m.nombre) LIKE '%ana%'";
             }
@@ -79,27 +77,25 @@ export const procesarPreguntaIA = async (req, res) => {
             sqlEjecutado = `SELECT c.fecha_hora, m.nombre AS doctor, c.motivo, c.estado 
                             FROM citas c 
                             JOIN medicos m ON c.id_medico = m.id_medico 
-                            WHERE c.id_paciente = '${idPaciente}' ${filtroDoctor}
+                            WHERE c.id_paciente = '${idPaciente}' ${filtroDoctor} 
                             ORDER BY c.fecha_hora DESC FETCH FIRST 1 ROWS ONLY`;
 
             const result = await connection.execute(sqlEjecutado, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
             if (result.rows.length > 0) {
-                const med = result.rows[0];
+                const cita = result.rows[0];
+                const fecha = new Date(cita.FECHA_HORA || cita.fecha_hora).toLocaleDateString();
+                const estado = cita.ESTADO || cita.estado;
+                const doctor = cita.DOCTOR || cita.doctor;
+                const motivo = cita.MOTIVO || cita.motivo;
                 
-                const nombreMed = med.NOMBRE_COMERCIAL || med.nombre_comercial;
-                const estadoMed = med.ESTADO_TEXTO || med.estado_texto || "Desconocido";
-                
-                let stockMed = 0; 
-                if (med.STOCK_ACTUAL !== undefined && med.STOCK_ACTUAL !== null) {
-                    stockMed = med.STOCK_ACTUAL;
-                } else if (med.stock_actual !== undefined && med.stock_actual !== null) {
-                    stockMed = med.stock_actual;
+                if(estado === 'Pendiente' || estado === 'Confirmada') {
+                    respuestaHumana = `Tienes una cita programada el ${fecha} con el ${doctor} (Motivo: ${motivo}).`;
+                } else {
+                    respuestaHumana = `Tu cita con el ${doctor} fue el ${fecha} y ya se encuentra '${estado}'.`;
                 }
-                
-                respuestaHumana = `De ${nombreMed} tienes ${stockMed} unidades. Tu estado actual es: ${estadoMed}.`;
             } else {
-                respuestaHumana = `No encontré ningún registro en tu inventario actual para esa medicina.`;
+                respuestaHumana = `Revisé tu historial, pero no tienes citas registradas con ese doctor.`;
             }
         }
 
